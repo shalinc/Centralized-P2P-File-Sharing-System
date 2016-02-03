@@ -1,0 +1,316 @@
+package client;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.net.Socket;
+
+public class Client 
+{
+
+	
+	public static void main(String[] args) 
+	{
+		// TODO Auto-generated method stub
+		/*Thread t1 = new Thread(new ImplPeer());
+		t1.start();
+		 */	
+		String fileDirectory = "/home/shalin/p2psharedFolder/send/";
+
+		while(true)
+		{
+			try 
+			{	
+				Socket cAsServer = new Socket("localhost",5004);
+				int userInpPort = Integer.parseInt(args[0]);
+
+				//thread for peer upload
+				Thread t1 = new Thread(new ClientUpload(fileDirectory,userInpPort));
+				t1.start();
+
+				String choice;
+
+				do
+				{
+					System.out.println("MENU");
+					System.out.println("1. Register Client");
+					System.out.println("2. Search for a File");
+					System.out.println("3. Obtain file");
+					System.out.println("4. Exit");
+
+					DataInputStream dIS = new DataInputStream(System.in);
+					choice = dIS.readLine();
+
+					DataInputStream dInpServer = new DataInputStream(cAsServer.getInputStream());
+					DataOutputStream dOutServer = new DataOutputStream(cAsServer.getOutputStream());
+					String userRegisterInfo = null;
+					String searchFileName = null;
+					switch(choice)
+					{
+
+					case "1":
+						dOutServer.writeUTF(choice);
+						dOutServer.flush();
+
+						System.out.println("Enter the filename and IP Address to register");
+						userRegisterInfo = dIS.readLine();
+						//System.out.println("Read the line");
+						dOutServer.writeUTF(userRegisterInfo);
+						//System.out.println("wrote the line");
+						break;
+
+					case "2":
+						dOutServer.writeUTF(choice);
+						dOutServer.flush();
+
+						System.out.println("Enter the filename to be searched: ");
+						searchFileName = dIS.readLine();
+						dOutServer.writeUTF(searchFileName);
+						String searchResults = dInpServer.readUTF();
+						System.out.println(searchResults);
+						break;
+
+					case "3":
+						System.out.println("Enter the fileName");
+						String obtainFileName = dIS.readLine();
+						System.out.println("Enter the PeerID");
+						String obtainPeerID = dIS.readLine();
+
+						obtain(obtainFileName,obtainPeerID,userInpPort);
+						break;
+						
+					case "4":
+						System.out.println("Client Connection Closing .. Bye !!!");
+						cAsServer.close();
+						break;
+						
+					default:
+						break;
+
+					}
+					/*System.out.println("Do you want to continue (Y/N)");
+					choice = dIS.readLine();*/
+				}while(true);
+			} 
+			catch (IOException e) 
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+
+
+	/*class ImplPeer implements Runnable
+{
+
+	public void run()
+	{
+		while(true)
+		{
+			try 
+			{	
+				Socket cAsServer = new Socket("localhost",5004);
+
+				String choice;
+
+				do
+				{
+					System.out.println("MENU");
+					System.out.println("1. Register Client");
+					System.out.println("2. Search for a File");
+					System.out.println("3. Obtain file");
+					System.out.println("4. Exit");
+
+					DataInputStream dIS = new DataInputStream(System.in);
+					choice = dIS.readLine();
+
+					DataInputStream dInpServer = new DataInputStream(cAsServer.getInputStream());
+					DataOutputStream dOutServer = new DataOutputStream(cAsServer.getOutputStream());
+					String userRegisterInfo = null;
+					String searchFileName = null;
+					switch(choice)
+					{
+
+					case "1":
+						dOutServer.writeUTF(choice);
+						dOutServer.flush();
+
+						System.out.println("Enter the filename and IP Address to register");
+						userRegisterInfo = dIS.readLine();
+						//System.out.println("Read the line");
+						dOutServer.writeUTF(userRegisterInfo);
+						//System.out.println("wrote the line");
+						break;
+
+					case "2":
+						dOutServer.writeUTF(choice);
+						dOutServer.flush();
+
+						System.out.println("Enter the filename to be searched: ");
+						searchFileName = dIS.readLine();
+						dOutServer.writeUTF(searchFileName);
+						String searchResults = dInpServer.readUTF();
+						System.out.println(searchResults);
+						break;
+
+					case "3":
+						System.out.println("Enter the fileName");
+						String obtainFileName = dIS.readLine();
+						System.out.println("Enter the PeerID");
+						String obtainPeerID = dIS.readLine();
+
+						obtain(obtainFileName,obtainPeerID);
+						break;
+					default:
+						break;
+
+					}
+				}while(!choice.equals("4"));
+			} 
+			catch (IOException e) 
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+
+	}*/
+
+/*	private static byte[] readFileFromPeer(String fileName,String filePath) throws IOException
+	{
+		BufferedReader buffReader = new BufferedReader(new InputStreamReader(System.in));
+
+		//check if file already exists in the path
+		File checkFile = new File(filePath);
+		if (!checkFile.exists()) 
+		{
+			return null;
+		}
+
+		//get the file size
+		int size = (int) checkFile.length();
+
+		//allocate a buffer to store contents of file
+		byte[] buffContent = new byte[size];
+		DataInputStream dis = new DataInputStream(new FileInputStream(checkFile));
+
+		//keep a count of reading the bytes
+		int startRead = 0;	//at the start
+		int numOfRead = 0;	//how much is read
+
+		//read into buffContent, from StartRead until end
+		while (startRead < buffContent.length && (numOfRead = dis.read(buffContent, startRead, buffContent.length - startRead)) >= 0) 
+		{
+			startRead = startRead + numOfRead;
+		}
+
+		// Ensure all the bytes have been read in
+		if (startRead < buffContent.length) 
+		{
+			System.out.println("Unable to read: " + checkFile.getName());
+		}
+		return buffContent;
+
+	}
+*/
+/*	private static void writeFileToPeer(String fileName, byte[] bytes) throws IOException
+	{
+		if (bytes == null) 
+		{
+			System.out.println("InValidFile");
+			return;
+		}
+
+		// write file to shared directory
+
+		System.out.println("Enter your Peer ID");
+		Scanner scan = new Scanner(System.in);
+		String peerID;
+		peerID = scan.nextLine();
+
+		String dirName = "Peer"+peerID;
+		File directory = new File(dirName);
+		if (!directory.exists()) 
+		{
+			System.out.println("Creating New Directory named Peer"+peerID);
+			directory.mkdir();
+		}
+		String strFilePath = dirName +"/"+fileName;
+
+		try 
+		{
+			FileOutputStream writeFileStream = new FileOutputStream(strFilePath);
+
+			writeFileStream.write(bytes);
+
+			writeFileStream.close();
+
+			// successful write add to registry
+			//CentralIndexServer.registry(peerID, fileName);
+			System.out.println("\ndisplay file " + fileName);
+
+		} catch (FileNotFoundException ex) 
+		{
+			System.out.println("FileNotFoundException : " + ex);
+		}
+	}
+*/
+	
+	/*
+	 * Obtain Method
+	 */
+	
+	
+	private static void obtain(String fileName,String peerID,int userInPort) throws IOException
+	{
+		
+		String filePath = "/home/shalin/p2psharedFolder/receive/";
+		int portNumberForP2P = userInPort;
+		
+		//Make a connection with server to get file from
+		Socket peerClient = new Socket("localhost",portNumberForP2P);
+		System.out.println("Downloading File Please wait ...");
+
+		DataInputStream in = new DataInputStream(peerClient.getInputStream());
+		DataOutputStream out = new DataOutputStream(peerClient.getOutputStream());
+
+		System.out.println("writing filename to serverclient");
+		out.writeUTF(fileName);
+		out.flush();
+		System.out.println("Wrote filename to serverclient");
+
+		System.out.println("reading data from serverclient");
+		String strFilePath = filePath + fileName;
+
+		int buffSize = in.read();
+		byte[] b = new byte[buffSize];
+		
+		int numberofbytesread = in.read(b);
+		
+		System.out.println("Number of bytes read: "+numberofbytesread);
+		//System.out.println("offset is: "+offset+"length is: "+length);
+		System.out.println("read the data from serverclient");
+
+		try 
+		{
+			FileOutputStream writeFileStream = new FileOutputStream(strFilePath);
+
+			writeFileStream.write(b);
+
+			writeFileStream.close();
+
+			// successful write add to registry
+			//CentralIndexServer.registry(peerID, fileName);
+			System.out.println("\ndisplay file " + fileName);
+
+		} catch (FileNotFoundException ex) 
+		{
+			System.out.println("FileNotFoundException : " + ex);
+		}
+	}
+}
+
+
